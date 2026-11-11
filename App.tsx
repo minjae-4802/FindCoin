@@ -44,6 +44,16 @@ label{font-size:13px;font-weight:700;color:#53617a}
 .balance{font-size:35px;font-weight:900;color:#15976f}
 .notice{padding:12px;border-radius:9px;background:#eef5ff;margin:12px 0}
 .auth{max-width:430px;margin:65px auto}
+.field{
+  color:#18243b !important;
+  background:#ffffff !important;
+  -webkit-text-fill-color:#18243b !important;
+  caret-color:#18243b;
+}
+.field::placeholder{
+  color:#8994a8 !important;
+  opacity:1;
+}
 @media(max-width:600px){.wrap{padding:13px}.hero{padding:25px 20px}.hero h1{font-size:27px}.nav{padding:13px}.panel{padding:16px}}
 `;
 
