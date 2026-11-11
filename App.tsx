@@ -68,6 +68,7 @@ export default function App() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [tab, setTab] = useState('home');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [title, setTitle] = useState('');
@@ -194,6 +195,123 @@ export default function App() {
       setBusy(false);
     }
   }
+
+async function startEdit(item: Item) {
+  if (item.user_id !== session.user.id) {
+    setMessage('본인이 작성한 게시글만 수정할 수 있습니다.');
+    return;
+  }
+
+  setEditingItem(item);
+  setTitle(item.title);
+  setDescription(item.description || '');
+  setCategory(item.category);
+  setLocation(item.location);
+  setItemType(item.item_type);
+  setPhoto(null);
+  setSelectedItem(null);
+  setMessage('');
+  setTab('write');
+}
+
+async function updateItem() {
+  if (!editingItem) return;
+
+  if (!title.trim() || !location.trim()) {
+    setMessage('제목과 장소를 입력해 주세요.');
+    return;
+  }
+
+  setBusy(true);
+  setMessage('');
+
+  try {
+    let imageUrl = editingItem.image_url;
+
+    if (photo) {
+      const ext = photo.name.split('.').pop() || 'jpg';
+      const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(path, photo, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(path);
+
+      imageUrl = data.publicUrl;
+    }
+
+    const { error } = await supabase
+      .from('items')
+      .update({
+        item_type: itemType,
+        title: title.trim(),
+        description,
+        category,
+        location,
+        image_url: imageUrl,
+      })
+      .eq('id', editingItem.id)
+      .eq('user_id', session.user.id);
+
+    if (error) throw error;
+
+    setEditingItem(null);
+    setTitle('');
+    setDescription('');
+    setLocation('');
+    setCategory('기타');
+    setItemType('lost');
+    setPhoto(null);
+    setMessage('게시글이 수정됐어요!');
+
+    await loadData();
+    setTab('board');
+  } catch (e: any) {
+    setMessage('수정 실패: ' + e.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function deleteItem(item: Item) {
+  if (item.user_id !== session.user.id) {
+    setMessage('본인이 작성한 게시글만 삭제할 수 있습니다.');
+    return;
+  }
+
+  const confirmed = window.confirm(
+    '정말 이 게시글을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.'
+  );
+
+  if (!confirmed) return;
+
+  setBusy(true);
+  setMessage('');
+
+  try {
+    const { error } = await supabase
+      .from('items')
+      .delete()
+      .eq('id', item.id)
+      .eq('user_id', session.user.id);
+
+    if (error) throw error;
+
+    setSelectedItem(null);
+    setMessage('게시글이 삭제됐어요!');
+
+    await loadData();
+  } catch (e: any) {
+    setMessage('삭제 실패: ' + e.message);
+  } finally {
+    setBusy(false);
+  }
+}
 
   async function sendFC() {
     const value = Number(amount);
@@ -458,14 +576,36 @@ export default function App() {
                     <span className="muted">
                       {item.status === 'open' ? '진행 중' : '해결됨'}
                     </span>
-                    <div style={{ marginTop: 15 }}>
+                    
+<div style={{ marginTop: 15, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
   <button
     className="btn"
     onClick={() => setSelectedItem(item)}
   >
     상세보기
   </button>
+
+  {item.user_id === session.user.id && (
+    <>
+      <button
+        className="btn light"
+        disabled={busy}
+        onClick={() => startEdit(item)}
+      >
+        수정
+      </button>
+
+      <button
+        className="btn red"
+        disabled={busy}
+        onClick={() => deleteItem(item)}
+      >
+        삭제
+      </button>
+    </>
+  )}
 </div>
+
                   </div>
                 </article>
               ))}
@@ -533,7 +673,7 @@ export default function App() {
 
         {tab === 'write' && (
           <section className="panel">
-            <h2>게시글 등록</h2>
+            <h2>{editingItem ? '게시글 수정' : '게시글 등록'}</h2>
             <label>등록 종류</label>
             <select
               className="field"
@@ -591,9 +731,37 @@ export default function App() {
               onChange={(e) => setPhoto(e.target.files?.[0] || null)}
             />
             {photo && <p className="muted">선택한 사진: {photo.name}</p>}
-            <button className="btn" disabled={busy} onClick={createItem}>
-              {busy ? '등록 중...' : '게시글 등록하기'}
-            </button>
+           <button
+  className="btn"
+  disabled={busy}
+  onClick={editingItem ? updateItem : createItem}
+>
+  {busy
+    ? '처리 중...'
+    : editingItem
+    ? '수정 완료'
+    : '게시글 등록하기'}
+</button>
+
+{editingItem && (
+  <button
+    className="btn light"
+    style={{ marginLeft: 8 }}
+    onClick={() => {
+      setEditingItem(null);
+      setTitle('');
+      setDescription('');
+      setLocation('');
+      setCategory('기타');
+      setItemType('lost');
+      setPhoto(null);
+      setTab('board');
+      setMessage('');
+    }}
+  >
+    취소
+  </button>
+)}
           </section>
         )}
 
