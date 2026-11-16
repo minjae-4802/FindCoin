@@ -96,6 +96,8 @@ export default function App() {
   const [walletAddress, setWalletAddress] = useState('');
   const [chainBalance, setChainBalance] = useState('0');
   const [walletBusy, setWalletBusy] = useState(false);
+  const [chainRecipient, setChainRecipient] = useState('');
+  const [chainAmount, setChainAmount] = useState('');
   async function connectWallet() {
   if (!window.ethereum) {
     setMessage('MetaMask가 설치되어 있지 않습니다.');
@@ -162,6 +164,69 @@ export default function App() {
     setWalletBusy(false);
   }
 }
+ async function sendOnChainFC() {
+  if (!window.ethereum) {
+    setMessage('MetaMask를 설치해 주세요.');
+    return;
+  }
+
+  if (!walletAddress) {
+    setMessage('먼저 MetaMask 지갑을 연결해 주세요.');
+    return;
+  }
+
+  if (!/^0x[a-fA-F0-9]{40}$/.test(chainRecipient)) {
+    setMessage('올바른 받는 사람 지갑 주소를 입력해 주세요.');
+    return;
+  }
+
+  if (!/^\d+(\.\d{1,18})?$/.test(chainAmount) ||
+      Number(chainAmount) <= 0) {
+    setMessage('올바른 FC 수량을 입력해 주세요.');
+    return;
+  }
+
+  setWalletBusy(true);
+  setMessage('');
+
+  try {
+    const chainId = await window.ethereum.request({
+      method: 'eth_chainId',
+    });
+
+    if (chainId !== SEPOLIA_CHAIN_ID) {
+      throw new Error('MetaMask 네트워크를 Sepolia로 변경해 주세요.');
+    }
+
+    const parts = chainAmount.split('.');
+    const whole = BigInt(parts[0]);
+    const fraction = BigInt(
+      (parts[1] || '').padEnd(18, '0') || '0'
+    );
+
+    const tokenAmount = whole * 10n ** 18n + fraction;
+
+    const addressData = chainRecipient.slice(2).toLowerCase().padStart(64, '0');
+    const amountData = tokenAmount.toString(16).padStart(64, '0');
+
+    const txHash = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: walletAddress,
+        to: FC_CONTRACT,
+        data: '0xa9059cbb' + addressData + amountData,
+      }],
+    });
+
+    setMessage('송금 요청 완료! 트랜잭션 해시: ' + txHash);
+    setChainAmount('');
+    setChainRecipient('');
+  } catch (error: any) {
+    setMessage('FC 송금 실패: ' + error.message);
+  } finally {
+    setWalletBusy(false);
+  }
+} 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
@@ -507,8 +572,22 @@ async function deleteItem(item: Item) {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span className="muted">{session.user.email}</span>
-            <button className="btn light" onClick={logout}>
-              로그아웃
+
+<button
+  className="btn green"
+  disabled={walletBusy}
+  onClick={connectWallet}
+>
+  {walletBusy
+    ? '연결 중...'
+    : walletAddress
+    ? '지갑 연결 완료'
+    : 'MetaMask 연결'}
+</button>
+
+<button className="btn light" onClick={logout}>
+  로그아웃
+</button>
             </button>
           </div>
         </div>
@@ -850,6 +929,52 @@ async function deleteItem(item: Item) {
             <h2>내 FC 지갑</h2>
             <p className="muted">현재 보유 잔액</p>
             <div className="balance">{balance.toLocaleString()} FC</div>
+            <div className="notice">
+  <strong>블록체인 지갑</strong>
+
+  <p>
+    {walletAddress
+      ? `연결 주소: ${walletAddress}`
+      : '아직 MetaMask가 연결되지 않았습니다.'}
+  </p>
+
+  <p>
+    실제 보유 FC: {chainBalance} FC
+  </p>
+<h3>블록체인 FC 송금</h3>
+
+<label>받는 사람의 MetaMask 주소</label>
+<input
+  className="field"
+  value={chainRecipient}
+  onChange={(e) => setChainRecipient(e.target.value)}
+  placeholder="0x로 시작하는 지갑 주소"
+/>
+
+<label>송금할 FC 수량</label>
+<input
+  className="field"
+  type="number"
+  min="0"
+  step="0.000000000000000001"
+  value={chainAmount}
+  onChange={(e) => setChainAmount(e.target.value)}
+  placeholder="예: 100"
+/>
+
+<button
+  className="btn green"
+  disabled={walletBusy || !walletAddress}
+  onClick={sendOnChainFC}
+>
+  {walletBusy ? '처리 중...' : '블록체인 FC 송금하기'}
+</button>
+  {!walletAddress && (
+    <button className="btn green" onClick={connectWallet}>
+      MetaMask 연결하기
+    </button>
+  )}
+</div>
             <div className="notice">
               회원 ID는 송금받을 사람의 UUID입니다. 이메일이나 비밀번호를
               입력하지 마세요.
