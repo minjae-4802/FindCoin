@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
+declare global {
+  interface Window {
+    ethereum?: {
+      request: (args: {
+        method: string;
+        params?: unknown[];
+      }) => Promise<any>;
+    };
+  }
+}
 
+const FC_CONTRACT = '0x237951a1143f67e5E03A6e0738EA7aF7bC91Bd83';
+const SEPOLIA_CHAIN_ID = '0xaa36a7';
 type Item = {
   id: string;
   user_id: string;
