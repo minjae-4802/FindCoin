@@ -93,7 +93,9 @@ export default function App() {
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-
+  const [walletAddress, setWalletAddress] = useState('');
+  const [chainBalance, setChainBalance] = useState('0');
+  const [walletBusy, setWalletBusy] = useState(false);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
