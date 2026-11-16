@@ -96,6 +96,72 @@ export default function App() {
   const [walletAddress, setWalletAddress] = useState('');
   const [chainBalance, setChainBalance] = useState('0');
   const [walletBusy, setWalletBusy] = useState(false);
+  async function connectWallet() {
+  if (!window.ethereum) {
+    setMessage('MetaMask가 설치되어 있지 않습니다.');
+    return;
+  }
+
+  setWalletBusy(true);
+  setMessage('');
+
+  try {
+    const accounts = await window.ethereum.request({
+      method: 'eth_requestAccounts',
+    });
+
+    if (!accounts || accounts.length === 0) {
+      throw new Error('MetaMask 계정을 찾을 수 없습니다.');
+    }
+
+    let address = accounts[0];
+
+    let chainId = await window.ethereum.request({
+      method: 'eth_chainId',
+    });
+
+    if (chainId !== SEPOLIA_CHAIN_ID) {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: SEPOLIA_CHAIN_ID }],
+      });
+    }
+
+    const data =
+      '0x70a08231' + address.slice(2).toLowerCase().padStart(64, '0');
+
+    const result = await window.ethereum.request({
+      method: 'eth_call',
+      params: [
+        {
+          to: FC_CONTRACT,
+          data,
+        },
+        'latest',
+      ],
+    });
+
+    const rawBalance = BigInt(result);
+    const wholeBalance = rawBalance / 10n ** 18n;
+    const fraction = (rawBalance % 10n ** 18n)
+      .toString()
+      .padStart(18, '0')
+      .slice(0, 4)
+      .replace(/0+$/, '');
+
+    setWalletAddress(address);
+    setChainBalance(
+      wholeBalance.toLocaleString() +
+        (fraction ? '.' + fraction : '')
+    );
+
+    setMessage('MetaMask 지갑이 연결됐습니다!');
+  } catch (error: any) {
+    setMessage('지갑 연결 실패: ' + error.message);
+  } finally {
+    setWalletBusy(false);
+  }
+}
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
