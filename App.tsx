@@ -615,7 +615,9 @@ async function deleteItem(item: Item) {
         <section className="grid">
           <div className="panel">
             <div className="muted">내 FC 잔액</div>
-            <div className="balance">{balance.toLocaleString()} FC</div>
+            <div className="balance">
+  {walletAddress ? `${chainBalance} ` : balance.toLocaleString()} FC
+</div>
             <button className="btn light" onClick={() => setTab('wallet')}>
               내 지갑 보기
             </button>
