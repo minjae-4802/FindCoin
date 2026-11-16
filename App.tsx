@@ -588,7 +588,6 @@ async function deleteItem(item: Item) {
 <button className="btn light" onClick={logout}>
   로그아웃
 </button>
-            </button>
           </div>
         </div>
       </header>
