@@ -456,7 +456,7 @@ async function sendOnChainFC() {
     .from('chain_transactions')
     .select('*')
     .or(
-      `sender_wallet.eq.${walletAddress},recipient_wallet.eq.${walletAddress}`
+      `sender_wallet.ilike.${walletAddress},recipient_wallet.ilike.${walletAddress}`
     )
     .order('created_at', { ascending: false });
 
