@@ -516,15 +516,16 @@ async function sendOnChainFC() {
         imageUrl = data.publicUrl;
       }
 
-      const { error } = await supabase.from('items').insert({
-        user_id: session.user.id,
-        item_type: itemType,
-        title: title.trim(),
-        description,
-        category,
-        location,
-        image_url: imageUrl,
-      });
+     const { error } = await supabase.from('items').insert({
+  user_id: session.user.id,
+  item_type: itemType,
+  title: title.trim(),
+  description,
+  category,
+  location,
+  contact_email: contactEmail.trim() || null,
+  image_url: imageUrl,
+});
       if (error) throw error;
 
       setTitle('');
