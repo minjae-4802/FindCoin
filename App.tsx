@@ -240,6 +240,7 @@ export default function App() {
   const [message, setMessage] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
   const [chainBalance, setChainBalance] = useState('0');
+  const [chainTransactions, setChainTransactions] = useState<any[]>([]);
   const [walletBusy, setWalletBusy] = useState(false);
   const [chainRecipient, setChainRecipient] = useState('');
   const [chainAmount, setChainAmount] = useState('');
