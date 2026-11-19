@@ -427,27 +427,39 @@ export default function App() {
   }, [session]);
 
   async function loadData() {
-    const { data: posts, error } = await supabase
-      .from('items')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error) setItems(posts || []);
+  const { data: posts, error } = await supabase
+    .from('items')
+    .select('')
+    .order('created_at', { ascending: false });
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('fc_balance')
-      .eq('id', session.user.id)
-      .maybeSingle();
-    if (profile) setBalance(profile.fc_balance || 0);
+  if (!error) setItems(posts || []);
 
-    const { data: history } = await supabase
-      .from('fc_transactions')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
-    setTransactions(history || []);
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('fc_balance')
+    .eq('id', session.user.id)
+    .maybeSingle();
+
+  if (profile) setBalance(profile.fc_balance || 0);
+
+  const { data: history } = await supabase
+    .from('fc_transactions')
+    .select('')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  setTransactions(history || []);
+
+  const { data: chainHistory, error: chainError } = await supabase
+    .from('chain_transactions')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (!chainError) {
+    setChainTransactions(chainHistory || []);
   }
-
+}
   async function authenticate() {
     setBusy(true);
     setMessage('');
