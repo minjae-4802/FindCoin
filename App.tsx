@@ -310,7 +310,7 @@ export default function App() {
     setWalletBusy(false);
   }
 }
- async function sendOnChainFC() {
+async function sendOnChainFC() {
   if (!window.ethereum) {
     setMessage('MetaMask를 설치해 주세요.');
     return;
@@ -331,8 +331,10 @@ export default function App() {
     return;
   }
 
-  if (!/^\d+(\.\d{1,18})?$/.test(chainAmount) ||
-      Number(chainAmount) <= 0) {
+  if (
+    !/^\d+(\.\d{1,18})?$/.test(chainAmount) ||
+    Number(chainAmount) <= 0
+  ) {
     setMessage('올바른 FC 수량을 입력해 주세요.');
     return;
   }
@@ -374,27 +376,7 @@ export default function App() {
         data: '0xa9059cbb' + addressData + amountData,
       }],
     });
-const { data: savedTx, error: saveError } = await supabase
-  .from('chain_transactions')
-  .insert({
-    user_id: session.user.id,
-    sender_wallet: walletAddress,
-    recipient_wallet: chainRecipient,
-    amount: chainAmount,
-    tx_hash: txHash,
-    status: 'submitted',
-  })
-  .select()
-  .single();
 
-if (saveError) {
-  throw new Error(
-    '송금 요청은 접수됐지만 거래 내역 저장에 실패했습니다: ' +
-    saveError.message
-  );
-}
-
-setChainTransactions((prev) => [savedTx, ...prev]);
     const { data: savedTx, error: saveError } = await supabase
       .from('chain_transactions')
       .insert({
@@ -410,7 +392,7 @@ setChainTransactions((prev) => [savedTx, ...prev]);
 
     if (saveError) {
       throw new Error(
-        '블록체인 송금 요청은 접수됐지만 거래 내역 저장에 실패했습니다: ' +
+        '송금 요청은 접수됐지만 거래 내역 저장에 실패했습니다: ' +
         saveError.message
       );
     }
