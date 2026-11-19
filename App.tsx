@@ -320,6 +320,11 @@ export default function App() {
     return;
   }
 
+  if (!session?.user?.id) {
+    setMessage('먼저 FindCoin에 로그인해 주세요.');
+    return;
+  }
+
   if (!/^0x[a-fA-F0-9]{40}$/.test(chainRecipient)) {
     setMessage('올바른 받는 사람 지갑 주소를 입력해 주세요.');
     return;
@@ -351,8 +356,14 @@ export default function App() {
 
     const tokenAmount = whole * 10n ** 18n + fraction;
 
-    const addressData = chainRecipient.slice(2).toLowerCase().padStart(64, '0');
-    const amountData = tokenAmount.toString(16).padStart(64, '0');
+    const addressData = chainRecipient
+      .slice(2)
+      .toLowerCase()
+      .padStart(64, '0');
+
+    const amountData = tokenAmount
+      .toString(16)
+      .padStart(64, '0');
 
     const txHash = await window.ethereum.request({
       method: 'eth_sendTransaction',
@@ -363,15 +374,38 @@ export default function App() {
       }],
     });
 
-    setMessage('송금 요청 완료! 트랜잭션 해시: ' + txHash);
+    const { data: savedTx, error: saveError } = await supabase
+      .from('chain_transactions')
+      .insert({
+        user_id: session.user.id,
+        sender_wallet: walletAddress,
+        recipient_wallet: chainRecipient,
+        amount: chainAmount,
+        tx_hash: txHash,
+        status: 'submitted',
+      })
+      .select()
+      .single();
+
+    if (saveError) {
+      throw new Error(
+        '블록체인 송금 요청은 접수됐지만 거래 내역 저장에 실패했습니다: ' +
+        saveError.message
+      );
+    }
+
+    setChainTransactions((prev) => [savedTx, ...prev]);
+
+    setMessage('FC 송금 요청 및 거래 내역 저장 완료! 해시: ' + txHash);
     setChainAmount('');
     setChainRecipient('');
+
   } catch (error: any) {
-    setMessage('FC 송금 실패: ' + error.message);
+    setMessage('FC 송금 처리 오류: ' + error.message);
   } finally {
     setWalletBusy(false);
   }
-} 
+}
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const {
