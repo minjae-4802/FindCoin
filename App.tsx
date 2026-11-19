@@ -1212,6 +1212,32 @@ async function deleteItem(item: Item) {
             {transactions.length === 0 && (
               <p className="muted">아직 거래 내역이 없습니다.</p>
             )}
+            <div className="notice">
+  <h3>블록체인 거래 내역</h3>
+
+  {chainTransactions.length === 0 ? (
+    <p className="muted">아직 블록체인 거래 내역이 없습니다.</p>
+  ) : (
+    chainTransactions.map((tx) => (
+      <div key={tx.id} className="notice">
+        <strong>FC 블록체인 송금</strong>
+        <div>보낸 금액: {Number(tx.amount).toLocaleString()} FC</div>
+        <div>
+          받는 지갑: {tx.recipient_wallet}
+        </div>
+        <div className="muted">
+          {new Date(tx.created_at).toLocaleString('ko-KR')}
+        </div>
+        <div className="muted">
+          상태: {tx.status === 'submitted' ? '송금 요청 접수' : tx.status}
+        </div>
+        <div className="muted">
+          거래 해시: {tx.tx_hash}
+        </div>
+      </div>
+    ))
+  )}
+</div>
           </section>
         )}
 
