@@ -232,6 +232,7 @@ export default function App() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('기타');
   const [location, setLocation] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [itemType, setItemType] = useState<'lost' | 'found'>('lost');
   const [photo, setPhoto] = useState<File | null>(null);
   const [recipient, setRecipient] = useState('');
