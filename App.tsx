@@ -21,6 +21,7 @@ type Item = {
   description: string;
   category: string;
   location: string;
+  contact_email: string | null;
   image_url: string | null;
   status: string;
   created_at: string;
