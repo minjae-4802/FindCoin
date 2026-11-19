@@ -374,7 +374,27 @@ export default function App() {
         data: '0xa9059cbb' + addressData + amountData,
       }],
     });
+const { data: savedTx, error: saveError } = await supabase
+  .from('chain_transactions')
+  .insert({
+    user_id: session.user.id,
+    sender_wallet: walletAddress,
+    recipient_wallet: chainRecipient,
+    amount: chainAmount,
+    tx_hash: txHash,
+    status: 'submitted',
+  })
+  .select()
+  .single();
 
+if (saveError) {
+  throw new Error(
+    '송금 요청은 접수됐지만 거래 내역 저장에 실패했습니다: ' +
+    saveError.message
+  );
+}
+
+setChainTransactions((prev) => [savedTx, ...prev]);
     const { data: savedTx, error: saveError } = await supabase
       .from('chain_transactions')
       .insert({
