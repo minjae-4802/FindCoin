@@ -452,10 +452,12 @@ async function sendOnChainFC() {
 
   setTransactions(history || []);
 
-  const { data: chainHistory, error: chainError } = await supabase
+ const { data: chainHistory, error: chainError } = await supabase
     .from('chain_transactions')
     .select('*')
-    .eq('user_id', session.user.id)
+    .or(
+      `sender_wallet.eq.${walletAddress},recipient_wallet.eq.${walletAddress}`
+    )
     .order('created_at', { ascending: false });
 
  if (chainError) {
