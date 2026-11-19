@@ -458,9 +458,11 @@ async function sendOnChainFC() {
     .eq('user_id', session.user.id)
     .order('created_at', { ascending: false });
 
-  if (!chainError) {
-    setChainTransactions(chainHistory || []);
-  }
+ if (chainError) {
+  setMessage('블록체인 거래 내역 불러오기 실패: ' + chainError.message);
+} else {
+  setChainTransactions(chainHistory || []);
+}
 }
   async function authenticate() {
     setBusy(true);
