@@ -531,6 +531,7 @@ async function sendOnChainFC() {
       setTitle('');
       setDescription('');
       setLocation('');
+      setContactEmail('');
       setPhoto(null);
       setMessage('게시글이 등록됐어요!');
       await loadData();
@@ -553,6 +554,7 @@ async function startEdit(item: Item) {
   setDescription(item.description || '');
   setCategory(item.category);
   setLocation(item.location);
+  setContactEmail(item.contact_email || '');
   setItemType(item.item_type);
   setPhoto(null);
   setSelectedItem(null);
@@ -599,6 +601,7 @@ async function updateItem() {
         description,
         category,
         location,
+        contact_email: contactEmail.trim() || null,
         image_url: imageUrl,
       })
       .eq('id', editingItem.id)
@@ -610,6 +613,7 @@ async function updateItem() {
     setTitle('');
     setDescription('');
     setLocation('');
+    setContactEmail('');
     setCategory('기타');
     setItemType('lost');
     setPhoto(null);
@@ -1013,12 +1017,20 @@ async function deleteItem(item: Item) {
     </p>
 
     <div className="notice">
+    
       <strong>상세 설명</strong>
       <p>{selectedItem.description || '설명이 없습니다.'}</p>
     </div>
 
     <p>📍 장소: {selectedItem.location}</p>
-
+ <p>
+  📧 연락 이메일:{' '}
+  {selectedItem.contact_email ? (
+    <a href={`mailto:${selectedItem.contact_email}`}>
+      {selectedItem.contact_email}
+    </a>
+  ) : '등록된 이메일이 없습니다.'}
+</p>
     <p>
       📅 등록일:{' '}
       {new Date(selectedItem.created_at).toLocaleString('ko-KR')}
@@ -1076,6 +1088,14 @@ async function deleteItem(item: Item) {
               onChange={(e) => setLocation(e.target.value)}
               placeholder="예: 학교 도서관"
             />
+            <label>연락받을 이메일</label>
+<input
+  className="field"
+  type="email"
+  value={contactEmail}
+  onChange={(e) => setContactEmail(e.target.value)}
+  placeholder="연락받을 이메일 주소"
+/>
             <label>상세 설명</label>
             <textarea
               className="field"
