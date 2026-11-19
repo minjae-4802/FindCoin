@@ -429,7 +429,7 @@ export default function App() {
   async function loadData() {
   const { data: posts, error } = await supabase
     .from('items')
-    .select('')
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (!error) setItems(posts || []);
@@ -444,7 +444,7 @@ export default function App() {
 
   const { data: history } = await supabase
     .from('fc_transactions')
-    .select('')
+    .select('*')
     .eq('user_id', session.user.id)
     .order('created_at', { ascending: false });
 
