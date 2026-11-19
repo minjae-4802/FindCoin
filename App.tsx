@@ -1074,7 +1074,7 @@ async function deleteItem(item: Item) {
           <section className="panel">
             <h2>내 FC 지갑</h2>
             <p className="muted">현재 보유 잔액</p>
-            <div className="balance">{balance.toLocaleString()} FC</div>
+            <div className="balance">{chainBalance || '0'} FC</div>
             <div className="notice">
   <strong>블록체인 지갑</strong>
 
