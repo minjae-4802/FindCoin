@@ -426,7 +426,7 @@ async function sendOnChainFC() {
       setBalance(0);
       setTransactions([]);
     }
-  }, [session]);
+  }, [session,walletAddress]);
 
   async function loadData() {
   const { data: posts, error } = await supabase
