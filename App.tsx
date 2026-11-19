@@ -1203,7 +1203,7 @@ async function deleteItem(item: Item) {
                     : 'FC 사용'}
                 </strong>
                 <div>{tx.description || '거래 내역'}</div>
-                <div>{tx.amount.toLocaleString()} FC</div>
+                <div>{Number(tx.amount).toLocaleString()} FC</div>
                 <div className="muted">
                   {new Date(tx.created_at).toLocaleString('ko-KR')}
                 </div>
